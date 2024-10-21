@@ -1,8 +1,27 @@
 # aiocarrot
 
-**aiocarrot** is fully asynchronous framework for working with <a href="https://www.rabbitmq.com/">RabbitMQ</a>
+**aiocarrot** is a fully asynchronous framework for working with the <a href="https://www.rabbitmq.com/">RabbitMQ</a> message broker
 
-Accelerate development with a message broker at times with **aiocarrot**
+___
+
+**Source Code: https://github.com/d3nbr0/aiocarrot**
+
+___
+
+The key features are:
+
+* **Completely asynchronous** - aiocarrot has the <a href="https://pypi.org/project/aio-pika/">aiopika</a> library running under the hood
+* **Fast to code** - the framework allows you to reduce the amount of code in your project, as well as speed up its development
+* **Fields validation** - aiocarrot supports field validation using <a href="https://pypi.org/project/pydantic/">pydantic</a>
+
+## Requirements
+
+The following dependencies are required for **aiocarrot** to work:
+
+* <a href="https://pypi.org/project/aio-pika/">aio-pika</a> for working with RabbitMQ
+* <a href="https://pypi.org/project/pydantic/">pydantic</a> for fields validation
+* <a href="https://pypi.org/project/ujson/">ujson</a> for sending and receiving messages
+* <a href="https://pypi.org/project/loguru/">loguru</a> for logging :)
 
 ## Installation
 
@@ -67,5 +86,7 @@ async def main() -> None:
 if __name__ == '__main__':
     asyncio.run(main())
 ```
+
+**You can find more examples <a href="https://github.com/d3nbr0/aiocarrot/tree/main/examples">here</a>**
 
 It's very simple to use. Enjoy!

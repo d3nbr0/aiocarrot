@@ -34,10 +34,10 @@ class Carrot:
 
     async def send(self, _cnm: str, **kwargs) -> 'ConfirmationFrameType':
         """
-        Send message with specified name
+        Send a message with the specified type and the specified payload
 
-        :param _cnm: Message name
-        :param kwargs: Message payload
+        :param _cnm: The name of the message (used to determine the type of message being sent)
+        :param kwargs: The payload transmitted in the message body
         :return:
         """
 
@@ -69,7 +69,7 @@ class Carrot:
 
     async def run(self) -> None:
         """
-        Start carrot listening
+        Starts the main loop of the Carrot new message listener
 
         :return:
         """
@@ -100,7 +100,7 @@ class Carrot:
 
     async def _consumer_loop(self) -> None:
         """
-        Consumer primary loop
+        The main event loop used by Carrot to receive new messages and pass them on to the handler
 
         :return:
         """
@@ -161,7 +161,7 @@ class Carrot:
 
     async def _get_queue(self) -> 'aio_pika.abc.AbstractQueue':
         """
-        Get active broker queue
+        Retrieves the currently active aiopika queue object
 
         :return: aiopika queue
         """
@@ -174,7 +174,7 @@ class Carrot:
 
     async def _get_channel(self) -> 'aio_pika.abc.AbstractChannel':
         """
-        Get active broker channel
+        Gets the current active object of the aiopika channel
 
         :return: aiopika channel
         """
@@ -187,7 +187,7 @@ class Carrot:
 
     async def _get_connection(self) -> 'aio_pika.abc.AbstractConnection':
         """
-        Get active connection to the broker
+        Retrieves the object of an active connection with the broker using aiopika
 
         :return: aiopika broker connection
         """
