@@ -31,9 +31,6 @@ class Field:
     def __post_init__(self) -> None:
         self._type_adapter: TypeAdapter[any] = TypeAdapter(
             Annotated[self.field_info.annotation, self.field_info],
-            config=ConfigDict(
-                arbitrary_types_allowed=True,
-            ),
         )
 
     def validate(self, value: any) -> tuple[T | None, str | None]:

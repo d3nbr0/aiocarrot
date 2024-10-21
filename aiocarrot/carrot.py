@@ -1,3 +1,5 @@
+from pydantic import BaseModel
+
 from loguru import logger
 
 from typing import Optional, TYPE_CHECKING
@@ -48,6 +50,11 @@ class Carrot:
             '_cid': message_id,
             '_cnm': _cnm,
             **kwargs,
+        }
+
+        message_body = {
+            key: (value.model_dump() if isinstance(value, BaseModel) else value)
+            for key, value in message_body.items()
         }
 
         payload = ujson.dumps(message_body).encode()
