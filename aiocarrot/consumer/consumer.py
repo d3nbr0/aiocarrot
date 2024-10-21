@@ -7,7 +7,6 @@ from abc import ABC
 from typing import TYPE_CHECKING
 from copy import deepcopy
 
-
 if TYPE_CHECKING:
     from typing import Callable
 
@@ -119,6 +118,16 @@ class Consumer(AbstractConsumer):
             return
 
         logger.info(f'[{_cid}] Message <{_cnm}> processed successfully')
+
+    def include_consumer(self, consumer: 'Consumer') -> None:
+        """
+        Include messages from the transmitted consumer into the current one
+
+        :param consumer: Consumer object
+        :return:
+        """
+
+        self._messages |= consumer._messages
 
 
 __all__ = (
