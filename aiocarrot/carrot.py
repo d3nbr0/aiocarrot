@@ -105,6 +105,11 @@ class Carrot:
         finally:
             logger.info('Shutting down...')
 
+            await self._channel.close()
+            await self._connection.close()
+
+            logger.info('Good bye!')
+
     async def _consumer_loop(self) -> None:
         """
         The main event loop used by Carrot to receive new messages and pass them on to the handler
