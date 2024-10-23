@@ -22,8 +22,20 @@ dependencies = [
 ]
 dynamic = ["version"]
 
+[project.optional-dependencies]
+test = [
+    "pytest~=8.3.3",
+    "pytest-asyncio~=0.24.0"
+]
+
 [project.urls]
 Repository = "https://github.com/d3nbr0/aiocarrot"
 
 [tool.hatch.version]
 path = "aiocarrot/__meta__.py"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = [
+    "tests",
+]
