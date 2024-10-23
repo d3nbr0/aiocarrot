@@ -96,10 +96,14 @@ class Carrot:
         logger.info('')
         logger.info('Starting listener loop...')
 
+        raise_loop_error = None
+
         try:
             await self._consumer_loop()
         except KeyboardInterrupt:
             pass
+        except asyncio.CancelledError as e:
+            raise_loop_error = e
         except BaseException:
             logger.trace('An unhandled error occurred while the consumer was working')
         finally:
@@ -109,6 +113,9 @@ class Carrot:
             await self._connection.close()
 
             logger.info('Good bye!')
+
+        if raise_loop_error is not None:
+            raise raise_loop_error
 
     async def _consumer_loop(self) -> None:
         """
