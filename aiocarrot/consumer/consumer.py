@@ -1,3 +1,5 @@
+from ..exceptions import MessageExistsError
+
 from .types import Message
 from .utils import get_dependant
 
@@ -126,6 +128,11 @@ class Consumer(AbstractConsumer):
         :param consumer: Consumer object
         :return:
         """
+
+        common_keys = list(set(self._messages.keys()) & set(consumer._messages.keys()))
+
+        if len(common_keys) > 0:
+            raise MessageExistsError(f'Error when trying to add a duplicate message: {common_keys[0]}')
 
         self._messages |= consumer._messages
 
