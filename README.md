@@ -2,6 +2,14 @@
 
 **aiocarrot** is a fully asynchronous framework for working with the <a href="https://www.rabbitmq.com/">RabbitMQ</a> message broker
 
+<a href="https://github.com/d3nbr0/aiocarrot/actions?query=branch%3Amain+event%3Apush">
+    <img src="https://github.com/d3nbr0/aiocarrot/workflows/tests/badge.svg" alt="Tests">
+</a>
+
+<a href="https://pypi.org/project/aiocarrot">
+    <img src="https://img.shields.io/pypi/v/aiocarrot?color=%2334D058&label=pypi%20package" alt="Version">
+</a>
+
 ___
 
 **Source Code: https://github.com/d3nbr0/aiocarrot**
