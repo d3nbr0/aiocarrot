@@ -103,7 +103,7 @@ class Consumer(AbstractConsumer):
 
             value, errors = field.validate(kwargs[field.name])
 
-            if not value:
+            if errors is not None:
                 logger.error(
                     f'[{_cid}] Error processing the message <{_cnm}>: field "{field.name}" with value "{kwargs[field.name]}" '
                     f'does not meet the validation conditions - {str(errors)}',
@@ -115,8 +115,8 @@ class Consumer(AbstractConsumer):
 
         try:
             await message.handler(**values)
-        except BaseException:
-            logger.trace(f'[{_cid}] Message processing failed <{_cnm}>')
+        except BaseException as e:
+            logger.error(f'[{_cid}] Message processing failed <{_cnm}>: {str(e)}')
             return
 
         logger.info(f'[{_cid}] Message <{_cnm}> processed successfully')
