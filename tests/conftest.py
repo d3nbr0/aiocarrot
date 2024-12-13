@@ -24,7 +24,7 @@ async def get_test_client(carrot_configuration: dict[str, str]) -> Carrot:
 
     task.cancel()
 
-    while not task.cancelled():
+    while not task.done():
         await asyncio.sleep(0.1)
 
 
