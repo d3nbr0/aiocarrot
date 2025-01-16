@@ -62,7 +62,7 @@ class Carrot:
         payload = ujson.dumps(message_body).encode()
 
         return await channel.default_exchange.publish(
-            message=aio_pika.Message(body=payload),
+            message=aio_pika.Message(body=payload, delivery_mode=aio_pika.DeliveryMode.PERSISTENT),
             routing_key=self._queue_name,
         )
 
@@ -191,7 +191,7 @@ class Carrot:
 
         if not self._queue:
             channel = await self._get_channel()
-            self._queue = await channel.declare_queue(self._queue_name, durable=True, auto_delete=True)
+            self._queue = await channel.declare_queue(self._queue_name, durable=True)
 
         return self._queue
 
