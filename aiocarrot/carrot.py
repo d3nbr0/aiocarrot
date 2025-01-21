@@ -122,7 +122,34 @@ class Carrot:
         if not consumer_task.done():
             consumer_task.cancel()
 
-        await self._shutdown()
+        await self.shutdown()
+
+    async def shutdown(self, silent: bool = False) -> None:
+        """
+        Shutdown carrot application
+
+        :return:
+        """
+
+        pending_tasks = [x for x in self._tasks if not x.done()]
+
+        if len(pending_tasks) > 0:
+            if not silent:
+                logger.info(f'Waiting for {len(pending_tasks)} tasks...')
+            await asyncio.gather(*pending_tasks)
+
+        try:
+            await self._channel.close()
+        except:
+            pass
+
+        try:
+            await self._connection.close()
+        except:
+            pass
+
+        if not silent:
+            logger.info('Good bye!')
 
     async def _consumer_loop(self) -> None:
         """
@@ -219,31 +246,6 @@ class Carrot:
             self._connection = await aio_pika.connect_robust(url=self._url)
 
         return self._connection
-
-    async def _shutdown(self) -> None:
-        """
-        Shutdown carrot application
-
-        :return:
-        """
-
-        pending_tasks = [x for x in self._tasks if not x.done()]
-
-        if len(pending_tasks) > 0:
-            logger.info(f'Waiting for {len(pending_tasks)} tasks...')
-            await asyncio.gather(*pending_tasks)
-
-        try:
-            await self._channel.close()
-        except:
-            pass
-
-        try:
-            await self._connection.close()
-        except:
-            pass
-
-        logger.info('Good bye!')
 
     def _exit_signal_handler(self, sig, frame) -> int:
         logger.info('Shutdown signal received')
