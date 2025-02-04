@@ -1,9 +1,9 @@
-from pydantic import TypeAdapter, ValidationError, ConfigDict
+from typing import Optional, Callable, NamedTuple, TypeVar, Annotated
+from dataclasses import dataclass
+
+from pydantic import TypeAdapter, ValidationError
 from pydantic.fields import FieldInfo
 from pydantic_core import PydanticUndefined as Undefined
-
-from typing import Callable, NamedTuple, TypeVar, Annotated
-from dataclasses import dataclass
 
 
 T = TypeVar('T')
@@ -33,7 +33,7 @@ class Field:
             Annotated[self.field_info.annotation, self.field_info],
         )
 
-    def validate(self, value: any) -> tuple[T | None, str | None]:
+    def validate(self, value: any) -> tuple[Optional[T], Optional[str]]:
         try:
             return self._type_adapter.validate_python(value, from_attributes=True), None
         except ValidationError as exc:
@@ -48,9 +48,10 @@ class Dependant:
 
 
 class Message(NamedTuple):
-    name: str | None
+    name: Optional[str]
     handler: Callable
     dependant: Dependant
+    schedule: Optional[str] = None
 
 
 __all__ = (

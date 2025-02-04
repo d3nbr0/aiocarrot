@@ -6,7 +6,7 @@ from .utils import get_dependant
 from loguru import logger
 
 from abc import ABC
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 from copy import deepcopy
 
 if TYPE_CHECKING:
@@ -52,7 +52,7 @@ class Consumer(AbstractConsumer):
     def __init__(self) -> None:
         self._messages = {}
 
-    def create_message(self, name: str, handler: 'Callable') -> None:
+    def create_message(self, name: str, handler: 'Callable', schedule: Optional[str] = None) -> None:
         split_name = name.split()
 
         if len(split_name) != 1:
@@ -62,11 +62,12 @@ class Consumer(AbstractConsumer):
             name=name,
             handler=handler,
             dependant=get_dependant(handler=handler),
+            schedule=schedule,
         )
 
         self._messages[name] = message
 
-    def message(self, name: str | list[str]) -> 'Callable':
+    def message(self, name: str | list[str], schedule: Optional[str] = None) -> 'Callable':
         def decorator(func: 'Callable') -> 'Callable':
             if not isinstance(name, list):
                 message_names = [name]
@@ -74,7 +75,7 @@ class Consumer(AbstractConsumer):
                 message_names = name
 
             for message_name in message_names:
-                self.create_message(name=message_name, handler=func)
+                self.create_message(name=message_name, handler=func, schedule=schedule)
 
             return func
 
