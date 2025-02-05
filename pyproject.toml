@@ -18,7 +18,8 @@ dependencies = [
     "aio-pika>=9.4.3,<9.5",
     "loguru>=0.7.2,<0.8.0",
     "pydantic>=2.9.2,<3.0.0",
-    "ujson>=5.10.0"
+    "ujson>=5.10.0",
+    "croniter>=6.0.0",
 ]
 dynamic = ["version"]
 

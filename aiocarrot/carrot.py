@@ -2,9 +2,11 @@ from pydantic import BaseModel
 
 from loguru import logger
 
+from .scheduler import Scheduler
+
 from typing import Optional, TYPE_CHECKING
 
-import asyncio, aio_pika, ujson, uuid, copy, signal
+import asyncio, aio_pika, ujson, uuid, copy, signal, aiormq
 
 if TYPE_CHECKING:
     from aiormq.abc import ConfirmationFrameType
@@ -23,6 +25,7 @@ class Carrot:
     _connection: Optional['aio_pika.abc.AbstractConnection'] = None
     _channel: Optional['aio_pika.abc.AbstractChannel'] = None
     _queue: Optional['aio_pika.abc.AbstractQueue'] = None
+    _scheduler: Optional['Scheduler'] = None
 
     def __init__(self, url: str, queue_name: str) -> None:
         """
@@ -35,6 +38,7 @@ class Carrot:
         self._url = url
         self._tasks = []
         self._queue_name = queue_name
+        self._scheduler = Scheduler(carrot=self)
 
     async def send(self, _cnm: str, **kwargs) -> 'ConfirmationFrameType':
         """
@@ -76,6 +80,19 @@ class Carrot:
 
         self._consumer = consumer
 
+        self._scheduler.clear()
+        self._scheduler.stop()
+
+        for _, message in self._consumer._messages.items():
+            if not message.schedule:
+                continue
+
+            self._scheduler.add_task(message)
+
+        if self._is_consumer_alive and self._scheduler.has_tasks:
+            scheduler_task = asyncio.create_task(self._scheduler.reload())
+            self._tasks.append(scheduler_task)
+
     async def run(self) -> None:
         """
         Starts the main loop of the Carrot new message listener
@@ -99,6 +116,10 @@ class Carrot:
             logger.info(f'  * {message_name}')
 
         logger.info('')
+
+        if self._scheduler.has_tasks:
+            asyncio.create_task(self._scheduler.start())
+
         logger.info('Starting listener loop...')
 
         signal.signal(signal.SIGINT, self._exit_signal_handler)
@@ -131,6 +152,7 @@ class Carrot:
         :return:
         """
 
+        self._scheduler.stop()
         pending_tasks = [x for x in self._tasks if not x.done()]
 
         if len(pending_tasks) > 0:
@@ -163,51 +185,62 @@ class Carrot:
         logger.info('Consumer is successfully connected to queue')
 
         async with queue.iterator() as queue_iterator:
-            async for message in queue_iterator:
-                for task in copy.copy(self._tasks):
-                    if task.done():
-                        self._tasks.remove(task)
+            if not self._is_consumer_alive:
+                return
 
-                async with message.process():
-                    decoded_message: str = message.body.decode()
+            try:
+                await self._iterate_queue(queue_iterator)
+            except aiormq.ChannelClosed:
+                return
 
-                    try:
-                        message_payload = ujson.loads(decoded_message)
+    async def _iterate_queue(self, queue_iterator: 'aio_pika.abc.AbstractQueueIterator') -> None:
+        """ Iterates over the queue iterator and passes the message on to the handler """
 
-                        assert isinstance(message_payload, dict)
-                    except ujson.JSONDecodeError:
-                        logger.error(f'Error receiving the message (failed to receive JSON): {decoded_message}')
-                        continue
+        async for message in queue_iterator:
+            for task in copy.copy(self._tasks):
+                if task.done():
+                    self._tasks.remove(task)
 
-                    message_id = message_payload.get('_cid')
-                    message_name = message_payload.get('_cnm')
+            async with message.process():
+                decoded_message: str = message.body.decode()
 
-                    if not message_id:
-                        logger.error(
-                            'The message format could not be determined (identifier is missing): '
-                            f'{message_payload}'
-                        )
+                try:
+                    message_payload = ujson.loads(decoded_message)
 
-                        continue
+                    assert isinstance(message_payload, dict)
+                except ujson.JSONDecodeError:
+                    logger.error(f'Error receiving the message (failed to receive JSON): {decoded_message}')
+                    continue
 
-                    if not message_name:
-                        logger.error(
-                            'The message format could not be determined (message name is missing): '
-                            f'{message_payload}'
-                        )
+                message_id = message_payload.get('_cid')
+                message_name = message_payload.get('_cnm')
 
-                        continue
+                if not message_id:
+                    logger.error(
+                        'The message format could not be determined (identifier is missing): '
+                        f'{message_payload}'
+                    )
 
-                    del message_payload['_cid']
-                    del message_payload['_cnm']
+                    continue
 
-                    task = asyncio.create_task(self._consumer.on_message(
-                        message_id,
-                        message_name,
-                        **message_payload,
-                    ))
+                if not message_name:
+                    logger.error(
+                        'The message format could not be determined (message name is missing): '
+                        f'{message_payload}'
+                    )
 
-                    self._tasks.append(task)
+                    continue
+
+                del message_payload['_cid']
+                del message_payload['_cnm']
+
+                task = asyncio.create_task(self._consumer.on_message(
+                    message_id,
+                    message_name,
+                    **message_payload,
+                ))
+
+                self._tasks.append(task)
 
     async def _get_queue(self) -> 'aio_pika.abc.AbstractQueue':
         """
