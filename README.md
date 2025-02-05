@@ -21,6 +21,7 @@ The key features are:
 * **Completely asynchronous** - aiocarrot has the <a href="https://pypi.org/project/aio-pika/">aiopika</a> library running under the hood
 * **Fast to code** - the framework allows you to reduce the amount of code in your project, as well as speed up its development
 * **Fields validation** - aiocarrot supports field validation using <a href="https://pypi.org/project/pydantic/">pydantic</a>
+* **Scheduler** - describe the task launch period in the cron format
 
 ## Requirements
 
@@ -94,6 +95,20 @@ async def main() -> None:
 if __name__ == '__main__':
     asyncio.run(main())
 ```
+
+### Scheduler
+
+You can use the scheduler to run your tasks automatically.<br>
+You can schedule a task using the cron format. For example, to run a task once every 15 minutes: `*/15 * * * *`<br>
+
+```python
+@consumer.message(name='example.scheduler', schedule='*/15 * * * *')
+async def scheduler_message(value: Optional[int] = None) -> None:
+    print('Your value is:', value or 0)
+```
+
+**NOTE**: The scheduler does not support working with arguments that do not have default values.
+If you want to schedule a message and it has arguments, make sure they all have a default value.
 
 **You can find more examples <a href="https://github.com/d3nbr0/aiocarrot/tree/main/examples">here</a>**
 
